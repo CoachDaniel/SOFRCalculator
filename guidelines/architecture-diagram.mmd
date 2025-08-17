@@ -1,0 +1,54 @@
+architecture-beta
+    group frontend(cloud)[MicroFrontend Application]
+    group domains(server)[Domain Layer]
+    group services(database)[Application Services]
+    group external(internet)[External Services]
+
+    service loanCalc(server)[Loan Calculation Engine] in domains
+    service rateManagement(server)[Rate Management] in domains
+    service bookValue(server)[Book Value Engine] in domains
+
+    service stateManager(database)[State Management] in services
+    service dataAccess(database)[Data Access Layer] in services
+    service eventBus(database)[Event Bus] in services
+    service cacheService(disk)[Cache Service] in services
+
+    service parameterInput(cloud)[Parameter Input] in frontend
+    service calculationDisplay(cloud)[Calculation Display] in frontend
+    service rateProjection(cloud)[Rate Projection] in frontend
+    service exportReporting(cloud)[Export Reporting] in frontend
+
+    service sofrApi(internet)[SOFR API] in external
+    service rateProviders(internet)[Rate Providers] in external
+
+    junction sharedUI
+    junction sharedTypes
+    junction sharedUtils
+
+    loanCalc:R -- L:stateManager
+    rateManagement:R -- L:stateManager
+    bookValue:R -- L:stateManager
+
+    stateManager:T -- B:eventBus
+    dataAccess:L -- R:eventBus
+    dataAccess:B -- T:cacheService
+    dataAccess:R --> L:sofrApi{group}
+    dataAccess:R --> L:rateProviders{group}
+
+    parameterInput:B -- T:eventBus
+    calculationDisplay:B -- T:eventBus
+    rateProjection:B -- T:eventBus
+    exportReporting:B -- T:eventBus
+
+    parameterInput:L -- R:sharedUI
+    calculationDisplay:L -- R:sharedUI
+    rateProjection:L -- R:sharedUI
+    exportReporting:L -- R:sharedUI
+
+    loanCalc:T -- B:sharedTypes
+    rateManagement:T -- B:sharedTypes
+    bookValue:T -- B:sharedTypes
+
+    parameterInput:B -- T:sharedUtils
+    calculationDisplay:B -- T:sharedUtils
+    exportReporting:B -- T:sharedUtils
