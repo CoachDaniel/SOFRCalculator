@@ -45,9 +45,9 @@ The proposed architecture separates the application into distinct micro-frontend
 
 The architecture diagram shows the complete system structure including:
 - **Frontend Layer**: Four independent micro-frontend modules
-- **Domain Layer**: Three core business logic engines
-- **Service Layer**: Application services for state, data access, and communication
-- **External Layer**: Integration with SOFR APIs and rate providers
+- **Domain Layer**: Three core business logic engines with multi-regional rate support
+- **Service Layer**: Application services with Provider Registry for multi-regional data sources
+- **External Layer**: Integration with multiple central banks (US Fed, Bank of Canada, Bank of England, ECB)
 - **Shared Libraries**: Common utilities, types, and UI components
 
 ### Module Breakdown
@@ -61,10 +61,44 @@ The architecture diagram shows the complete system structure including:
 - Day count conventions
 
 **Rate Management** (`/rate-management/`)
-- SOFR rate fetching and caching
-- Rate projection algorithms
-- Curve modeling (Nelson-Siegel, Cubic Spline)
-- Historical rate analysis
+- **Multi-Provider Architecture**: Configurable rate providers for different regions
+  - US: Federal Reserve (SOFR, Fed Funds Rate)
+  - Canada: Bank of Canada (CORRA, Bank Rate)
+  - UK: Bank of England (SONIA, Base Rate)
+  - Euro: European Central Bank (€STR, Main Refinancing Rate)
+  - Additional providers via plugin architecture
+- **Provider Abstraction Layer**: Common interface for all rate providers
+- **Rate Normalization**: Standardized rate formats across providers
+- **Failover & Redundancy**: Multiple data sources with automatic failover
+- **Rate Projection Algorithms**: Advanced forecasting models
+- **Curve Modeling**: Nelson-Siegel, Cubic Spline, and custom curve fitting
+- **Historical Rate Analysis**: Cross-regional rate correlation and analysis
+- **Rate Conversion**: Currency-specific rate transformations and basis adjustments
+
+### Multi-Provider Rate Management Strategy
+
+The enhanced rate management architecture supports global financial markets through:
+
+#### Provider Configuration
+- **Dynamic Provider Registration**: Runtime configuration of new rate providers
+- **Regional Rate Support**: 
+  - **US Markets**: SOFR, Fed Funds Rate, Treasury rates
+  - **Canadian Markets**: CORRA (Canadian Overnight Repo Rate Average), Bank of Canada rate
+  - **UK Markets**: SONIA (Sterling Overnight Index Average), Bank of England base rate  
+  - **European Markets**: €STR (Euro Short-Term Rate), ECB main refinancing rate
+  - **Extensible Framework**: Plugin architecture for additional providers
+
+#### Data Quality & Reliability
+- **Primary/Secondary Sources**: Hierarchical provider prioritization
+- **Cross-Validation**: Rate verification across multiple sources
+- **Real-time Monitoring**: Provider health checks and availability tracking
+- **Automated Failover**: Seamless switching between providers during outages
+
+#### Rate Harmonization
+- **Standardized Formats**: Common rate representation across all providers
+- **Timezone Handling**: Consistent UTC conversion for global rate coordination
+- **Holiday Calendars**: Region-specific business day calculations
+- **Rate Interpolation**: Gap filling for missing data points using regional best practices
 
 **Book Value Management** (`/book-value/`)
 - Amortization calculations
@@ -80,9 +114,13 @@ The architecture diagram shows the complete system structure including:
 - Event-driven state updates
 
 **Data Access Layer** (`/data-access/`)
-- API clients for external data
-- Caching strategies
-- Data transformation utilities
+- **Provider Registry**: Dynamic registration and configuration of rate providers
+- **API Client Factory**: Provider-specific API client generation
+- **Rate Aggregation**: Combining data from multiple regional sources
+- **Caching Strategies**: Multi-tier caching with provider-specific TTLs
+- **Data Transformation**: Rate normalization and currency-specific formatting
+- **Error Handling**: Provider-specific error handling and circuit breakers
+- **Authentication Management**: Provider-specific API key and auth handling
 
 **Event Bus** (`/event-bus/`)
 - Inter-module communication
@@ -156,21 +194,29 @@ The architecture diagram shows the complete system structure including:
 1. Extract calculation functions from `App.tsx` into pure domain services
 2. Create comprehensive unit tests for calculation logic
 3. Implement interfaces for rate management and book value calculations
+4. **Design Provider Abstraction Layer**: Create common interface for all rate providers
 
-### Phase 2: State Management Refactoring (Weeks 3-4)
+### Phase 2: Multi-Provider Infrastructure (Weeks 3-4)
+1. Implement Provider Registry for dynamic rate source configuration
+2. Create provider-specific adapters for US Fed Reserve (existing), Bank of Canada, Bank of England, ECB
+3. Implement rate normalization and harmonization logic
+4. Add failover and redundancy mechanisms
+
+### Phase 3: State Management & Communication (Weeks 5-6)
 1. Implement centralized state management (Redux Toolkit or Zustand)
-2. Create domain-specific state slices
+2. Create domain-specific state slices with multi-regional rate support
 3. Implement event-driven communication between modules
 
-### Phase 3: UI Module Separation (Weeks 5-7)
+### Phase 4: UI Module Separation (Weeks 7-9)
 1. Split UI components into independent micro-frontends
-2. Implement module federation or similar bundling strategy
-3. Create shared component library
+2. Add regional rate selection and configuration UI
+3. Implement provider status monitoring dashboard
+4. Create shared component library with multi-currency support
 
-### Phase 4: Testing & Optimization (Weeks 8-9)
-1. Implement comprehensive testing suite
-2. Add performance monitoring and optimization
-3. Create documentation and development guidelines
+### Phase 5: Testing & Optimization (Weeks 10-11)
+1. Implement comprehensive testing suite including multi-provider scenarios
+2. Add performance monitoring and regional rate latency optimization
+3. Create documentation and development guidelines for adding new providers
 
 ## Testing Strategy
 
